@@ -1,13 +1,14 @@
+use anyhow::Result;
+use axum::response::sse::Event;
+use axum::response::{Html, IntoResponse, Sse};
+use axum::routing::get;
+use axum::Router;
+use axum_extra::{headers, TypedHeader};
+use chrono::Local;
+use futures::{stream, Stream};
 use std::convert::Infallible;
 use std::time::Duration;
-use anyhow::Result;
-use axum::response::{Html, IntoResponse, Sse};
-use axum::response::sse::Event;
-use axum::Router;
-use axum::routing::get;
-use axum_extra::{headers, TypedHeader};
 use tokio::net::TcpListener;
-use futures::{stream, Stream};
 use tokio_stream::StreamExt;
 use tracing::{info, level_filters::LevelFilter};
 use tracing_subscriber::{fmt::Layer, layer::SubscriberExt, util::SubscriberInitExt, Layer as _};
@@ -49,7 +50,7 @@ pub(crate) async fn sse_handler(
     //
     // You can also create streams from tokio channels using the wrappers in
     // https://docs.rs/tokio-stream
-    let stream = stream::repeat_with(|| Event::default().data("hi!"))
+    let stream = stream::repeat_with(|| Event::default().data(format!("hi! now:{}", Local::now().to_string())))
         .map(Ok)
         .throttle(Duration::from_secs(1));
 

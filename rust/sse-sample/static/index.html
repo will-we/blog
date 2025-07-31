@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>SSE handler</title>
+    <title>SSE handler Rust</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="">
@@ -13,11 +13,13 @@
 <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
 <![endif]-->
 
-<h1>Server Sent Events</h1>
-
+<h1>Server Sent Events Power By Rust</h1>
+<div id="con"></div>
 <script lang="javascript">
+    let chat = document.getElementById("con");
     var source = new EventSource("/events");
     source.onmessage = function(event) {
+        chat.innerHTML += event.data + '<br/>';
         console.log("Got:", event.data);
     };
 </script>
