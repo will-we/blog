@@ -60,6 +60,13 @@ public class SseClient {
      * 给指定用户发送消息
      */
     public boolean sendMessage(String uid, String messageId, String message) {
+        return sendMessage(uid, messageId, message, null);
+    }
+    
+    /**
+     * 给指定用户发送消息，支持指定事件名称
+     */
+    public boolean sendMessage(String uid, String messageId, String message, String eventName) {
         if (!StringUtils.hasText(message)) {
             log.info("参数异常，msg为null");
             return false;
@@ -70,8 +77,22 @@ public class SseClient {
             return false;
         }
         try {
-            sseEmitter.send(SseEmitter.event().id(messageId).reconnectTime(Duration.ofSeconds(1).toMillis()).data(message));
-            log.info("用户{},消息id:{},推送成功:{}", uid, messageId, message);
+            SseEmitter.SseEventBuilder eventBuilder = SseEmitter.event()
+                    .reconnectTime(Duration.ofSeconds(1).toMillis())
+                    .data(message);
+            
+            if (StringUtils.hasText(messageId)) {
+                eventBuilder.id(messageId);
+            }
+            
+            if (StringUtils.hasText(eventName)) {
+                eventBuilder.name(eventName);
+                log.info("用户{},事件名称:{},推送成功:{}", uid, eventName, message);
+            } else {
+                log.info("用户{},消息id:{},推送成功:{}", uid, messageId, message);
+            }
+            
+            sseEmitter.send(eventBuilder);
             return true;
         } catch (Exception e) {
             sseEmitterMap.remove(uid);

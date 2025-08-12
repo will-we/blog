@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>SSE K线图示例</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        #chart-container {
+            width: 100%;
+            height: 600px;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>SSE K线图实时更新示例</h1>
+    <div id="chart-container"></div>
+    <div class="status" id="connection-status">连接状态: 未连接</div>
+    <div class="status" id="data-status">最新数据: 无</div>
+    
+    <script>
+        // 初始化图表
+        const chartDom = document.getElementById('chart-container');
+        const myChart = echarts.init(chartDom);
+        const connectionStatus = document.getElementById('connection-status');
+        const dataStatus = document.getElementById('data-status');
+        const upColor = "#ec0000";
+        const upBorderColor = "#8A0000";
+        const downColor = "#00da3c";
+        const downBorderColor = "#008F28";
+        
+        let klineData = [];
+        
+        // 配置K线图
+        const option = {
+            title: {
+                text: 'SSE实时K线图',
+                left: 'center'
+            },
+            // 图例配置
+            legend: {
+                data: ['K线图', 'MA5', 'MA10', 'MA20', 'MA30'],
+                top: '30px'
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross'
+                },
+                formatter: function (params) {
+                    console.log(params);
+                    const data = params[0].data;
+                    return [
+                        '时间: ' + params[0].axisValue + '<br/>',
+                        '开盘: ' + data[1] + '<br/>',
+                        '最高: ' + data[2] + '<br/>',
+                        '最低: ' + data[3] + '<br/>',
+                        '收盘: ' + data[4] + '<br/>'
+                    ].join('');
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '3%',
+                bottom: '15%'
+            },
+            xAxis: {
+                type: 'category',
+                data: [],
+                scale: true,
+                boundaryGap: false,
+                axisLine: { onZero: false },
+                splitLine: { show: false },
+                splitNumber: 20,
+                min: 'dataMin',
+                max: 'dataMax'
+            },
+            yAxis: {
+                scale: true,
+                splitArea: {
+                    show: true
+                }
+            },
+            dataZoom: [
+                {
+                    type: 'inside',
+                    start: 0,
+                    end: 100
+                },
+                {
+                    show: true,
+                    type: 'slider',
+                    top: '90%',
+                    start: 0,
+                    end: 100
+                }
+            ],
+            series: [
+                {
+                    name: 'K线图',
+                    type: 'candlestick',
+                    data: [],
+                    itemStyle: {
+                        color: '#ec0000',
+                        color0: '#00da3c',
+                        borderColor: '#8A0000',
+                        borderColor0: '#008F28'
+                    }
+                },
+                {
+                    name:"MA5",
+                    type:"line",
+                    data:[],
+                    smooth:true,
+                    lineStyle:{opacity:0.5}
+                },
+                {
+                    name:"MA10",
+                    type:"line",
+                    data:[],
+                    smooth:true,
+                    lineStyle:{opacity:0.5}
+                },
+                {
+                    name:"MA20",
+                    type:"line",
+                    data:[],
+                    smooth:true,
+                    lineStyle:{opacity:0.5}
+                },
+                {
+                    name:"MA30",
+                    type:"line",
+                    data:[],
+                    smooth:true,
+                    lineStyle:{opacity:0.5}
+                },
+            ]
+        };
+        
+        // 初始化图表并应用配置
+        myChart.setOption(option);
+        
+        // 窗口大小变化时自动调整图表大小
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+        
+        // 计算移动平均线
+        function calculateMA(dayCount, data) {
+            const result = [];
+            for (let i = 0; i < data.length; i++) {
+                if (i < dayCount - 1) {
+                    // 数据不足以计算MA
+                    result.push('-');
+                    continue;
+                }
+                let sum = 0;
+                for (let j = 0; j < dayCount; j++) {
+                    // 使用收盘价计算MA
+                    sum += data[i - j].close;
+                }
+                result.push((sum / dayCount).toFixed(2));
+            }
+            return result;
+        }
+        
+        // 格式化K线数据为ECharts所需格式
+        function formatKlineData(data) {
+            return data.map(item => {
+                const timeStr = new Date(item.time).toLocaleTimeString();
+                return {
+                    time: timeStr,
+                    open: item.open,
+                    close: item.close,
+                    low: item.low,
+                    high: item.high,
+                    volume: item.volume
+                };
+            });
+        }
+        
+        // 更新图表数据
+        function updateChart(data) {
+            const formattedData = formatKlineData(data);
+            const times = formattedData.map(item => item.time);
+            
+            // 计算各个周期的移动平均线
+            const ma5 = calculateMA(5, formattedData);
+            const ma10 = calculateMA(10, formattedData);
+            const ma20 = calculateMA(20, formattedData);
+            const ma30 = calculateMA(30, formattedData);
+            
+            myChart.setOption({
+                xAxis: {
+                    data: times
+                },
+                series: [
+                    {
+                        name: 'K线图',
+                        type: 'candlestick',
+                        data: formattedData.map(item => [
+                            item.open,   // 开盘价
+                            item.high,   // 最高价
+                            item.low,    // 最低价
+                            item.close   // 收盘价
+                        ]),
+                        itemStyle: {
+                            color: upColor,
+                            color0: downColor,
+                            borderColor: upBorderColor,
+                            borderColor0: downBorderColor
+                        }
+                    },
+                    {
+                        name: 'MA5',
+                        type: 'line',
+                        data: ma5,
+                        smooth: true,
+                        lineStyle: {opacity: 0.5}
+                    },
+                    {
+                        name: 'MA10',
+                        type: 'line',
+                        data: ma10,
+                        smooth: true,
+                        lineStyle: {opacity: 0.5}
+                    },
+                    {
+                        name: 'MA20',
+                        type: 'line',
+                        data: ma20,
+                        smooth: true,
+                        lineStyle: {opacity: 0.5}
+                    },
+                    {
+                        name: 'MA30',
+                        type: 'line',
+                        data: ma30,
+                        smooth: true,
+                        lineStyle: {opacity: 0.5}
+                    }
+                ]
+            });
+        }
+        
+        // 添加新的数据点
+        function addDataPoint(dataPoint) {
+            try {
+                const newPoint = JSON.parse(dataPoint);
+                klineData.push(newPoint);
+                
+                // 保持最多显示30个数据点
+                if (klineData.length > 30) {
+                    klineData.shift();
+                }
+                
+                updateChart(klineData);
+                dataStatus.innerHTML = `最新数据: ${new Date().toLocaleTimeString()} - 开盘: ${newPoint.open.toFixed(2)}, 收盘: ${newPoint.close.toFixed(2)}`;
+                console.log('新数据点:', newPoint);
+            } catch (e) {
+                console.error('解析数据失败:', e, dataPoint);
+            }
+        }
+        
+        // 连接SSE
+        if (window.EventSource) {
+            connectionStatus.innerHTML = '连接状态: 正在连接...';
+            
+            // 创建SSE连接
+            const eventSource = new EventSource('/kline/stream');
+            
+            eventSource.onopen = function() {
+                connectionStatus.innerHTML = '连接状态: 已连接';
+                connectionStatus.style.backgroundColor = '#d4edda';
+            };
+            
+            eventSource.addEventListener('message', function(event) {
+                if (event.data) {
+                    try {
+                        console.log('收到SSE消息:', event);
+                        // 添加新的数据点
+                        console.log('新数据点原始数据:', event.data);
+                        addDataPoint(event.data);
+                    } catch (e) {
+                        console.error('处理数据失败:', e, event.data);
+                    }
+                }
+            });
+            
+            // 监听初始数据事件
+            eventSource.addEventListener('init', function(event) {
+                try {
+                    console.log('收到初始数据:', event);
+                    klineData = JSON.parse(event.data);
+                    console.log('解析后的初始数据:', klineData);
+                    updateChart(klineData);
+                    dataStatus.innerHTML = `初始数据已加载 - ${klineData.length}个数据点`;
+                } catch (e) {
+                    console.error('处理初始数据失败:', e, event.data);
+                }
+            });
+            
+            // 监听更新数据事件
+            eventSource.addEventListener('update', function(event) {
+                try {
+                    console.log('收到更新数据:', event);
+                    addDataPoint(event.data);
+                } catch (e) {
+                    console.error('处理更新数据失败:', e, event.data);
+                }
+            });
+            
+            eventSource.onerror = function() {
+                connectionStatus.innerHTML = '连接状态: 连接失败或已断开';
+                connectionStatus.style.backgroundColor = '#f8d7da';
+            };
+        } else {
+            connectionStatus.innerHTML = '连接状态: 浏览器不支持SSE';
+            connectionStatus.style.backgroundColor = '#f8d7da';
+        }
+        
+        // 窗口大小变化时调整图表大小
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+    </script>
+</body>
+</html>
