@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,18 +51,31 @@ public class ChatEndpoint {
         ChatMessage joinMessage = new ChatMessage(JOIN, username + " 加入了聊天室", "系统");
         // 发送当前在线用户列表
         sendMessageToAll(JSONUtil.toJsonStr(joinMessage));
+        // 发送更新后的在线用户列表
+        sendOnlineUserList();
     }
 
     @OnMessage
-    public void onMessage(String message, Session session, @PathParam("username") String username, @PathParam("receiver") String receiver) {
+    public void onMessage(String message, Session session, @PathParam("username") String username) {
         log.info("收到来自用户{}的消息：{}", username, message);
-        ChatMessage chatMessage;
-        if(!StringUtils.hasLength(receiver)) {
-            chatMessage = new ChatMessage(CHAT, message, username);
-        } else {
-            chatMessage = new ChatMessage(CHAT, message, username, receiver);
+        
+        try {
+            // 尝试解析JSON消息
+            ChatMessage receivedMessage = JSONUtil.toBean(message, ChatMessage.class);
+            receivedMessage.setSender(username);
+            receivedMessage.setTimestamp(LocalDateTime.now());
+            
+            // 如果有接收者，设置为私聊消息
+            if (StringUtils.hasLength(receivedMessage.getReceiver())) {
+                receivedMessage.setPrivate(true);
+            }
+            
+            sendMessage(receivedMessage);
+        } catch (Exception e) {
+            // 如果不是JSON格式，当作普通群聊消息处理
+            ChatMessage chatMessage = new ChatMessage(CHAT, message, username);
+            sendMessage(chatMessage);
         }
-        sendMessage(chatMessage);
     }
 
     @OnClose
@@ -80,16 +94,20 @@ public class ChatEndpoint {
             sendMessageToAll(JSONUtil.toJsonStr(leaveMessage));
 
             // 发送更新后的在线用户列表
-            // sendOnlineUserList();
+            sendOnlineUserList();
         }
     }
 
 
     public void sendMessage(ChatMessage chatMessage) {
+        String jsonMessage = JSONUtil.toJsonStr(chatMessage);
         if (chatMessage.isPrivate()) {
-            sendMessageToUser(chatMessage.getReceiver(), chatMessage.getContent());
+            // 私聊消息：发送给接收者和发送者
+            sendMessageToUser(chatMessage.getReceiver(), jsonMessage);
+            sendMessageToUser(chatMessage.getSender(), jsonMessage);
         } else {
-            sendMessageToAll(chatMessage.getContent());
+            // 群聊消息：发送给所有人
+            sendMessageToAll(jsonMessage);
         }
     }
 
@@ -138,6 +156,6 @@ public class ChatEndpoint {
 
     private void sendOnlineUserList() {
         ChatMessage userListMessage = new ChatMessage(CHAT, String.join(",", userSessionMap.keySet()), "在线用户");
-        sendMessage(userListMessage);
+        sendMessageToAll(JSONUtil.toJsonStr(userListMessage));
     }
 }

@@ -11,6 +11,28 @@ class ChatClient {
         this.bindEvents();
     }
 
+    // 判断是否应该显示消息
+    shouldDisplayMessage(message) {
+        // 如果是群聊消息，只在群聊界面显示
+        if (!message.isPrivate) {
+            return this.currentChatTarget === null;
+        }
+        
+        // 如果是私聊消息，只在对应的私聊界面显示
+        if (message.isPrivate) {
+            // 当前在群聊界面，不显示私聊消息
+            if (this.currentChatTarget === null) {
+                return false;
+            }
+            
+            // 检查是否是当前私聊对象的消息
+            return (message.sender === this.currentChatTarget && message.receiver === this.username) ||
+                   (message.sender === this.username && message.receiver === this.currentChatTarget);
+        }
+        
+        return true;
+    }
+
     // 初始化DOM元素引用
     initializeElements() {
         // 登录相关
@@ -169,7 +191,10 @@ class ChatClient {
                     if (message.sender === '在线用户') {
                         this.updateOnlineUsers(message.content);
                     } else {
-                        this.displayMessage(message);
+                        // 检查是否应该显示此消息
+                        if (this.shouldDisplayMessage(message)) {
+                            this.displayMessage(message);
+                        }
                     }
                     break;
                 case 'JOIN':
@@ -355,6 +380,10 @@ class ChatClient {
         this.chatSubtitle.textContent = '私人对话';
         this.messageInput.placeholder = `向 ${targetUser} 发送私聊消息...`;
         
+        // 清空消息区域
+        this.messageArea.innerHTML = '';
+        this.addSystemMessage(`开始与 ${targetUser} 的私聊`);
+        
         // 更新用户列表选中状态
         document.querySelectorAll('.user-item').forEach(el => {
             el.classList.remove('selected');
@@ -371,6 +400,10 @@ class ChatClient {
         this.chatTitle.textContent = '群聊';
         this.chatSubtitle.textContent = '与所有人聊天';
         this.messageInput.placeholder = '输入消息...';
+        
+        // 清空消息区域
+        this.messageArea.innerHTML = '';
+        this.addSystemMessage('切换到群聊模式');
         
         // 更新选中状态
         document.querySelectorAll('.user-item').forEach(el => {
