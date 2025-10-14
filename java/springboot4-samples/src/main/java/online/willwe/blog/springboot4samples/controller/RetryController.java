@@ -3,6 +3,7 @@ package online.willwe.blog.springboot4samples.controller;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import online.willwe.blog.springboot4samples.config.ReTryConfig;
+import online.willwe.blog.springboot4samples.services.BizService;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.retry.RetryException;
@@ -17,13 +18,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class RetryController {
     @Resource
     private RetryTemplate retryTemplate;
+    @Resource
+    private BizService bizService;
 
     private int retryCount = 0;
 
     @GetMapping("/retry")
     public String retry() throws RetryException {
         retryTemplate.execute(new SimpleRetryable());
-        return "retryCount";
+        return "retryCount" + retryCount;
+    }
+
+    @GetMapping("/retryByAnnotation")
+    public String retryByAnnotation() {
+        bizService.actual();
+        return "retryByAnnotation";
     }
 
     class SimpleRetryable implements Retryable<@NonNull Boolean> {
@@ -44,6 +53,4 @@ public class RetryController {
             return "重试作业";
         }
     }
-
-
 }

@@ -7,9 +7,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    // 配置版本策略（使用Accept头方式）
+    // 配置版本策略
     @Override
     public void configureApiVersioning(ApiVersionConfigurer configurer) {
-        configurer.useQueryParam("version");
+        configurer.setVersionRequired(false)
+                .useQueryParam("version");
     }
 }
