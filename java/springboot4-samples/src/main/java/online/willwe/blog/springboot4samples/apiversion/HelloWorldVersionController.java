@@ -1,4 +1,4 @@
-package online.willwe.blog.springboot4samples.controller;
+package online.willwe.blog.springboot4samples.apiversion;
 
 import org.springframework.web.bind.annotation.*;
 

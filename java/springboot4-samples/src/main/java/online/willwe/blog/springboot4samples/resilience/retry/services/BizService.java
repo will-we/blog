@@ -1,7 +1,7 @@
-package online.willwe.blog.springboot4samples.services;
+package online.willwe.blog.springboot4samples.resilience.retry.services;
 
 import lombok.extern.slf4j.Slf4j;
-import online.willwe.blog.springboot4samples.config.ReTryConfig;
+import online.willwe.blog.springboot4samples.resilience.retry.config.ReTryConfig;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
@@ -12,7 +12,7 @@ public class BizService {
     int retryCount = 0;
 
     @org.springframework.resilience.annotation.Retryable(
-            maxAttempts = 4L, delay = 1000L, multiplier = 2,timeUnit = TimeUnit.MILLISECONDS
+            maxAttempts = 4L, delay = 2000L, multiplier = 2,timeUnit = TimeUnit.MILLISECONDS
     )
     public void actual() {
         if (retryCount++ < ReTryConfig.MAX_ATTEMPTS) {

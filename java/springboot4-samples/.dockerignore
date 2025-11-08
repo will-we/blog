@@ -1,0 +1,10 @@
+# 忽略与构建无关的文件，减小镜像上下文
+target/
+.git/
+.gitignore
+.DS_Store
+.idea/
+.vscode/
+*.iml
+**/node_modules/
+springboot4-samples.tar

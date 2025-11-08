@@ -1,9 +1,9 @@
-package online.willwe.blog.springboot4samples.controller;
+package online.willwe.blog.springboot4samples.resilience.retry.controller;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import online.willwe.blog.springboot4samples.config.ReTryConfig;
-import online.willwe.blog.springboot4samples.services.BizService;
+import online.willwe.blog.springboot4samples.resilience.retry.config.ReTryConfig;
+import online.willwe.blog.springboot4samples.resilience.retry.services.BizService;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.retry.RetryException;

@@ -1,4 +1,4 @@
-package online.willwe.blog.springboot4samples.config;
+package online.willwe.blog.springboot4samples.apiversion.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ApiVersionConfigurer;

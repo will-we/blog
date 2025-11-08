@@ -1,4 +1,4 @@
-package online.willwe.blog.springboot4samples.config;
+package online.willwe.blog.springboot4samples.resilience.retry.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
