@@ -12,7 +12,7 @@ public class BizService {
     int retryCount = 0;
 
     @org.springframework.resilience.annotation.Retryable(
-            maxAttempts = 4L, delay = 2000L, multiplier = 2,timeUnit = TimeUnit.MILLISECONDS
+            maxRetries = 4L, delay = 2000L, multiplier = 2,timeUnit = TimeUnit.MILLISECONDS
     )
     public void actual() {
         if (retryCount++ < ReTryConfig.MAX_ATTEMPTS) {
