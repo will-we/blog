@@ -1,14 +1,15 @@
 package online.willwe.blog.springboot4samples.resilience.retry.services;
 
-import lombok.extern.slf4j.Slf4j;
 import online.willwe.blog.springboot4samples.resilience.retry.config.ReTryConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
 @Service
-@Slf4j
 public class BizService {
+    final static Logger log = LoggerFactory.getLogger(BizService.class);
     int retryCount = 0;
 
     @org.springframework.resilience.annotation.Retryable(

@@ -1,11 +1,12 @@
 package online.willwe.blog.springboot4samples.resilience.retry.controller;
 
 import jakarta.annotation.Resource;
-import lombok.extern.slf4j.Slf4j;
 import online.willwe.blog.springboot4samples.resilience.retry.config.ReTryConfig;
 import online.willwe.blog.springboot4samples.resilience.retry.services.BizService;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.retry.RetryException;
 import org.springframework.core.retry.RetryTemplate;
 import org.springframework.core.retry.Retryable;
@@ -14,8 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 @RestController
-@Slf4j
 public class RetryController {
+    final static Logger log = LoggerFactory.getLogger(RetryController.class);
     @Resource
     private RetryTemplate retryTemplate;
     @Resource

@@ -1,7 +1,8 @@
 package online.willwe.blog.springboot4samples.resilience.retry.config;
 
-import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.retry.RetryPolicy;
@@ -10,9 +11,9 @@ import org.springframework.core.retry.Retryable;
 import org.springframework.core.retry.support.CompositeRetryListener;
 import org.springframework.util.backoff.FixedBackOff;
 
-@Slf4j
 @Configuration
 public class ReTryConfig {
+    final static Logger log = LoggerFactory.getLogger(ReTryConfig.class);
 
     public static final int MAX_ATTEMPTS = 3;
 
